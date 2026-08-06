@@ -14,6 +14,9 @@ pros::MotorGroup Intake({16}, pros::MotorGearset::blue); // right motor group - 
 // Inertial Sensor on port 10
 pros::Imu imu(7);
 
+// Pneumatic claw on ADI Port A
+pros::adi::DigitalOut claw('A');
+
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
 pros::Rotation horizontalEnc(20);
@@ -24,6 +27,8 @@ lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -5.
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, -2.5);
 */
+
+
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               &rightMotors, // right motor group
@@ -113,6 +118,14 @@ void initialize() {
     });
 }
 
+void clawOpen() {
+    claw.set_value(true);
+}
+
+void clawClose() {
+    claw.set_value(false);
+}
+
 /**
  * Runs while the robot is disabled
  */
@@ -164,10 +177,10 @@ void example_autonomous() {
 void autonomous() {
 
 }
-/**
- * Runs in driver control
- */
+
 void opcontrol() {
+    bool clawOpenState = false;
+
     while (true) {
         // Drive
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
@@ -203,6 +216,20 @@ void opcontrol() {
         }
         else {
             Arm.move_velocity(0);
+        }
+
+        // =========================
+        // Claw Controls
+        // X = Toggle Open/Close
+        // =========================
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
+            clawOpenState = !clawOpenState;
+
+            if (clawOpenState) {
+                clawOpen();
+            } else {
+                clawClose();
+            }
         }
 
         pros::delay(10);
