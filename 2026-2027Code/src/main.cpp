@@ -8,7 +8,7 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup leftMotors({-5, -3, -4},
                             pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
 pros::MotorGroup rightMotors({6, 2, 1}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
-pros::MotorGroup Arm({-12, 11}, pros::MotorGearset::green); // right motor group - ports 6, 7, 9 (reversed)
+pros::MotorGroup Arm({-12, 11}, pros::MotorGearset::red); // right motor group - ports 6, 7, 9 (reversed)
 pros::MotorGroup Intake({16}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
 // Inertial Sensor on port 10
@@ -94,6 +94,8 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
+    Arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD); // set arm to hold position when no power is applied
+
 
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
@@ -126,6 +128,22 @@ void clawClose() {
     claw.set_value(false);
 }
 
+void opcontrol() {
+     pros::adi::Pneumatics left_piston('a', false);         // Starts retracted, extends when the ADI port is high
+  pros::adi::Pneumatics right_piston('b', false, true); // Starts retracted, extends when the ADI port is low
+
+  pros::Controller master(pros::E_CONTROLLER_MASTER);
+  
+  while (true) {
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+      left_piston.extend();
+    }
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+      left_piston.retract();
+    }
+    pros::delay(10);
+  }
+}
 /**
  * Runs while the robot is disabled
  */
@@ -194,10 +212,10 @@ void opcontrol() {
         // R2 = Intake Reverse
         // =========================
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            Intake.move_velocity(200);
+            Intake.move_velocity(600);
         }
         else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-            Intake.move_velocity(-200);
+            Intake.move_velocity(-600);
         }
         else {
             Intake.move_velocity(0);
