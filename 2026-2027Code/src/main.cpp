@@ -8,10 +8,14 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup leftMotors({-5, -3, -4},
                             pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
 pros::MotorGroup rightMotors({6, 2, 1}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
-pros::MotorGroup Arm({-14, 19}, pros::MotorGearset::red); // right motor group - ports 6, 7, 9 (reversed)
-pros::MotorGroup Intake({16}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
-// Inertial Sensor on port 10
+// ARM - 4 motors total
+pros::MotorGroup ArmLeft({11}, pros::MotorGearset::red); // left side of arm
+pros::MotorGroup ArmRight({-12}, pros::MotorGearset::red); // right side of arm
+
+pros::MotorGroup Intake({16}, pros::MotorGearset::blue); // intake
+
+// Inertial Sensor on port 7
 pros::Imu imu(7);
 
 // Pneumatic claw on ADI Port A
@@ -20,10 +24,13 @@ pros::adi::DigitalOut claw('A');
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
 pros::Rotation horizontalEnc(20);
-// vertical tracking wheel encoder. Rotation sensor, port 11, reversed
-pros::Rotation verticalEnc(-11);
+
+// vertical tracking wheel encoder, port 17, reversed
+pros::Rotation verticalEnc(-17);
+
 /* horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
 lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -5.75);
+
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, -2.5);
 */
@@ -85,6 +92,44 @@ lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
 // create the chassis
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors, &throttleCurve, &steerCurve);
 
+int armlevel = 0; // sets the initial value for the arm level
+
+void armlift() {
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+        armlevel++;
+
+        if (armlevel == 1) {
+            ArmLeft.move_absolute(100, 100);
+            ArmRight.move_absolute(100, 100);
+        }
+        else if (armlevel == 2) {
+            ArmLeft.move_absolute(200, 100);
+            ArmRight.move_absolute(200, 100);
+        }
+        else if (armlevel == 3) {
+            ArmLeft.move_absolute(300, 100);
+            ArmRight.move_absolute(300, 100);
+        }
+        else if (armlevel == 4) {
+            ArmLeft.move_absolute(400, 100);
+            ArmRight.move_absolute(400, 100);
+        }
+        else if (armlevel == 5) {
+            ArmLeft.move_absolute(500, 100);
+            ArmRight.move_absolute(500, 100);
+        }
+        else if (armlevel == 6) {
+            ArmLeft.move_absolute(600, 100);
+            ArmRight.move_absolute(600, 100);
+        }
+        else if (armlevel == 7) {
+            ArmLeft.move_absolute(700, 100);
+            ArmRight.move_absolute(700, 100);
+        }
+    }
+}
+
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -94,8 +139,11 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
-    Arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD); // set arm to hold position when no power is applied
+    int stacklevel = 0; // sets the initial value for the stack level
 
+    // Set both sides of the arm to HOLD
+    ArmLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    ArmRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
@@ -112,8 +160,10 @@ void initialize() {
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
+
             // delay to save resources
             pros::delay(50);
         }
@@ -128,22 +178,6 @@ void clawClose() {
     claw.set_value(false);
 }
 
-void opcontrol() {
-     pros::adi::Pneumatics left_piston('a', false);         // Starts retracted, extends when the ADI port is high
-  pros::adi::Pneumatics right_piston('b', false, true); // Starts retracted, extends when the ADI port is low
-
-  pros::Controller master(pros::E_CONTROLLER_MASTER);
-  
-  while (true) {
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
-      left_piston.extend();
-    }
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-      left_piston.retract();
-    }
-    pros::delay(10);
-  }
-}
 /**
  * Runs while the robot is disabled
  */
@@ -166,28 +200,27 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
 void example_autonomous() {
     // Move to x: 20 and y: 15, and face heading 90. Timeout set to 4000 ms
     chassis.moveToPose(20, 15, 90, 4000);
+
     // Move to x: 0 and y: 0 and face heading 270, going backwards. Timeout set to 4000ms
     chassis.moveToPose(0, 0, 270, 4000, {.forwards = false});
+
     // cancel the movement after it has traveled 10 inches
     chassis.waitUntil(10);
     chassis.cancelMotion();
+
     // Turn to face the point x:45, y:-45. Timeout set to 1000
-    // dont turn faster than 60 (out of a maximum of 127)
     chassis.turnToPoint(45, -45, 1000, {.maxSpeed = 60});
+
     // Turn to face a direction of 90º. Timeout set to 1000
-    // will always be faster than 100 (out of a maximum of 127)
-    // also force it to turn clockwise, the long way around
     chassis.turnToHeading(90, 1000, {.direction = AngularDirection::CW_CLOCKWISE, .minSpeed = 100});
-    // Follow the path in path.txt. Lookahead at 15, Timeout set to 4000
-    // following the path with the back of the robot (forwards = false)
-    // see line 116 to see how to define a path
+
+    // Follow the path in path.txt
     chassis.follow(example_txt, 15, 4000, false);
-    // wait until the chassis has traveled 10 inches. Otherwise the code directly after
-    // the movement will run immediately
-    // Unless its another movement, in which case it will wait
+
+    // wait until the movement is done
     chassis.waitUntil(10);
     pros::lcd::print(4, "Traveled 10 inches during pure pursuit!");
-    // wait until the movement is done
+
     chassis.waitUntilDone();
     pros::lcd::print(4, "pure pursuit finished!");
 }
@@ -197,55 +230,65 @@ void autonomous() {
 }
 
 void opcontrol() {
+    pros::adi::Pneumatics left_piston('a', false);
+    pros::adi::Pneumatics right_piston('b', false, true);
+
     bool clawOpenState = false;
 
     while (true) {
+
+        // =========================
+        // Pneumatics
+        // =========================
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+            left_piston.extend();
+        }
+
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            left_piston.retract();
+        }
+
+
+        // =========================
         // Drive
+        // =========================
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
         chassis.arcade(leftY, rightX);
 
-        // =========================
-        // Intake Controls
-        // R1 = Intake Forward
-        // R2 = Intake Reverse
-        // =========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            Intake.move_velocity(600);
-        }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-            Intake.move_velocity(-600);
-        }
-        else {
-            Intake.move_velocity(0);
-        }
 
         // =========================
-        // Arm Controls
-        // L1 = Arm Up
-        // L2 = Arm Down
+        // Arm
+        // L1 = Up
+        // L2 = Down
+        // Release = Hold
         // =========================
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-            Arm.move_velocity(100);
+            ArmLeft.move_velocity(100);
+            ArmRight.move_velocity(100);
         }
         else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-            Arm.move_velocity(-100);
+            ArmLeft.move_velocity(-100);
+            ArmRight.move_velocity(-100);
         }
         else {
-            Arm.move_velocity(0);
+            ArmLeft.brake();
+            ArmRight.brake();
         }
 
+
         // =========================
-        // Claw Controls
-        // X = Toggle Open/Close
+        // Claw
+        // X = Toggle
         // =========================
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
             clawOpenState = !clawOpenState;
 
             if (clawOpenState) {
                 clawOpen();
-            } else {
+            }
+            else {
                 clawClose();
             }
         }
