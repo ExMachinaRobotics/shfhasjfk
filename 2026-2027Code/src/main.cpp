@@ -5,15 +5,13 @@
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
-pros::MotorGroup leftMotors({-5, -3, -4},
+pros::MotorGroup leftMotors({4, 3, 5},
                             pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
-pros::MotorGroup rightMotors({6, 2, 1}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
+pros::MotorGroup rightMotors({-1, -2, -6}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
-// ARM - 4 motors total
-pros::MotorGroup ArmLeft({11}, pros::MotorGearset::red); // left side of arm
-pros::MotorGroup ArmRight({-12}, pros::MotorGearset::red); // right side of arm
-
-pros::MotorGroup Intake({16}, pros::MotorGearset::blue); // intake
+// ARM - 2 motors total
+pros::MotorGroup ArmLeft({11}, pros::MotorGearset::green); // left side of arm
+pros::MotorGroup ArmRight({-12}, pros::MotorGearset::green); // right side of arm
 
 // Inertial Sensor on port 7
 pros::Imu imu(7);
@@ -92,49 +90,12 @@ lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
 // create the chassis
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors, &throttleCurve, &steerCurve);
 
-int armlevel = 0; // sets the initial value for the arm level
-
-void armlift() {
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-        armlevel++;
-
-        if (armlevel == 1) {
-            ArmLeft.move_absolute(100, 100);
-            ArmRight.move_absolute(100, 100);
-        }
-        else if (armlevel == 2) {
-            ArmLeft.move_absolute(200, 100);
-            ArmRight.move_absolute(200, 100);
-        }
-        else if (armlevel == 3) {
-            ArmLeft.move_absolute(300, 100);
-            ArmRight.move_absolute(300, 100);
-        }
-        else if (armlevel == 4) {
-            ArmLeft.move_absolute(400, 100);
-            ArmRight.move_absolute(400, 100);
-        }
-        else if (armlevel == 5) {
-            ArmLeft.move_absolute(500, 100);
-            ArmRight.move_absolute(500, 100);
-        }
-        else if (armlevel == 6) {
-            ArmLeft.move_absolute(600, 100);
-            ArmRight.move_absolute(600, 100);
-        }
-        else if (armlevel == 7) {
-            ArmLeft.move_absolute(700, 100);
-            ArmRight.move_absolute(700, 100);
-        }
-    }
-}
-
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
  * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
+ * to keep execution time for tis mode under a few seconds.
  */
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
@@ -238,15 +199,16 @@ void opcontrol() {
     while (true) {
 
         // =========================
-        // Pneumatics
+        // Mini lift
         // =========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
-            left_piston.extend();
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
         }
 
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            left_piston.retract();
-        }
+       // if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            //left_piston.retract();
+            //ArmLeft.move_relative(-45,100);
+            //ArmRight.move_relative(-45,100);
+        //}
 
 
         // =========================
@@ -255,7 +217,7 @@ void opcontrol() {
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-        chassis.arcade(leftY, rightX);
+        chassis.arcade(leftY, -rightX * 0.75);
 
 
         // =========================
@@ -269,8 +231,8 @@ void opcontrol() {
             ArmRight.move_velocity(100);
         }
         else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-            ArmLeft.move_velocity(-100);
-            ArmRight.move_velocity(-100);
+            ArmLeft.move_velocity(-75);
+            ArmRight.move_velocity(-75);
         }
         else {
             ArmLeft.brake();
