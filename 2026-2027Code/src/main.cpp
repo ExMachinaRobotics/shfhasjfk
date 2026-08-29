@@ -10,8 +10,8 @@ pros::MotorGroup leftMotors({4, 3, 5},
 pros::MotorGroup rightMotors({-1, -2, -6}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
 // ARM - 2 motors total
-pros::MotorGroup ArmLeft({11}, pros::MotorGearset::green); // left side of arm
-pros::MotorGroup ArmRight({-12}, pros::MotorGearset::green); // right side of arm
+pros::MotorGroup ArmLeft({11}, pros::MotorGearset::red); // left side of arm
+pros::MotorGroup ArmRight({-12}, pros::MotorGearset::red); // right side of arm
 
 // Inertial Sensor on port 7
 pros::Imu imu(7);
@@ -201,14 +201,13 @@ void opcontrol() {
         // =========================
         // Mini lift
         // =========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-        }
 
-       // if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            //left_piston.retract();
-            //ArmLeft.move_relative(-45,100);
-            //ArmRight.move_relative(-45,100);
-        //}
+           if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            ArmLeft.move_velocity(100);
+            ArmRight.move_velocity(100);
+            ArmLeft.move(1000);
+            ArmRight.move(1000);
+        }
 
 
         // =========================
@@ -239,14 +238,12 @@ void opcontrol() {
             ArmRight.brake();
         }
 
-
         // =========================
         // Claw
         // X = Toggle
         // =========================
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
             clawOpenState = !clawOpenState;
-
             if (clawOpenState) {
                 clawOpen();
             }
