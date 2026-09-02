@@ -191,6 +191,7 @@ void example_autonomous() {
 // Tune these numbers after testing on the real robot.
 const double ARM_STEP_DEGREES = 1000.0;
 const int ARM_STEP_VELOCITY = 100;
+uint32_t armTimeout = 2000; // Timeout in milliseconds
 
 void opcontrol() {
     pros::adi::Pneumatics left_piston('a', false);
@@ -232,22 +233,20 @@ void opcontrol() {
             ArmRight.move_relative(ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
             armStepMoving = true;
             armStepStartTime = pros::millis();
+            armTimeout = 2000; // Timeout in milliseconds
         }
         else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
             ArmLeft.move_absolute(0, ARM_STEP_VELOCITY);
             ArmRight.move_absolute(0, ARM_STEP_VELOCITY);
             armStepMoving = true;
             armStepStartTime = pros::millis();
+            armTimeout = 2000; // Timeout in milliseconds
         }
         else if (!armStepMoving) {
             ArmLeft.brake();
             ArmRight.brake();
         }
 
-        //arm times out after 600ms
-        if (armStepMoving && (pros::millis() - armStepStartTime) > 2000) {
-            armStepMoving = false;
-        }
 
         // =========================
         // Claw
@@ -260,7 +259,18 @@ void opcontrol() {
             }
             else {
                 clawClose();
+                ArmLeft.move_relative(90.0, ARM_STEP_VELOCITY);
+                ArmRight.move_relative(90.0, ARM_STEP_VELOCITY);
+                armStepMoving = true;
+                armStepStartTime = pros::millis();
+                armTimeout = 300; // Timeout in milliseconds
             }
+        }
+
+        
+        //arm times out after armTimeout milliseconds
+        if (armStepMoving && (pros::millis() - armStepStartTime) > armTimeout) {
+            armStepMoving = false;
         }
 
         pros::delay(10);
