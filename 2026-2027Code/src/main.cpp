@@ -234,8 +234,8 @@ void opcontrol() {
             armStepStartTime = pros::millis();
         }
         else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            ArmLeft.move_absolute(-ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
-            ArmRight.move_absolute(-ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
+            ArmLeft.move_absolute(0, ARM_STEP_VELOCITY);
+            ArmRight.move_absolute(0, ARM_STEP_VELOCITY);
             armStepMoving = true;
             armStepStartTime = pros::millis();
         }
@@ -244,8 +244,8 @@ void opcontrol() {
             ArmRight.brake();
         }
 
-        //arm times out after 300ms
-        if (armStepMoving && (pros::millis() - armStepStartTime) > 300) {
+        //arm times out after 600ms
+        if (armStepMoving && (pros::millis() - armStepStartTime) > 2000) {
             armStepMoving = false;
         }
 
