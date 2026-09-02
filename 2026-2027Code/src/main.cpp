@@ -102,7 +102,8 @@ void initialize() {
     chassis.calibrate(); // calibrate sensors
     int stacklevel = 0; // sets the initial value for the stack level
 
-    // Set both sides of the arm to HOLD
+    // Hold is okay at the final position, but for step movements we want
+    // the motor to stop cleanly after a move_relative() command.
     ArmLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     ArmRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
@@ -186,30 +187,20 @@ void example_autonomous() {
     pros::lcd::print(4, "pure pursuit finished!");
 }
 
-void autonomous() {
-
-}
+// Fixed-position up/down steps for the lift.
+// Tune these numbers after testing on the real robot.
+const double ARM_STEP_DEGREES = 1000.0;
+const int ARM_STEP_VELOCITY = 100;
 
 void opcontrol() {
     pros::adi::Pneumatics left_piston('a', false);
     pros::adi::Pneumatics right_piston('b', false, true);
 
     bool clawOpenState = false;
+    bool armStepMoving = false;
+    uint32_t armStepStartTime = 0;
 
     while (true) {
-
-        // =========================
-        // Mini lift
-        // =========================
-
-           if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            ArmLeft.move_velocity(100);
-            ArmRight.move_velocity(100);
-            ArmLeft.move(1000);
-            ArmRight.move(1000);
-        }
-
-
         // =========================
         // Drive
         // =========================
@@ -218,24 +209,44 @@ void opcontrol() {
 
         chassis.arcade(leftY, -rightX * 0.75);
 
-
         // =========================
         // Arm
-        // L1 = Up
-        // L2 = Down
-        // Release = Hold
+        // L1/L2 = manual hold control
+        // Up/Down = one fixed step each press
         // =========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        bool manualUp = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
+        bool manualDown = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
+
+        if (manualUp) {
             ArmLeft.move_velocity(100);
             ArmRight.move_velocity(100);
+            armStepMoving = false;
         }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        else if (manualDown) {
             ArmLeft.move_velocity(-75);
             ArmRight.move_velocity(-75);
+            armStepMoving = false;
         }
-        else {
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {
+            ArmLeft.move_relative(ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
+            ArmRight.move_relative(ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
+            armStepMoving = true;
+            armStepStartTime = pros::millis();
+        }
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+            ArmLeft.move_absolute(-ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
+            ArmRight.move_absolute(-ARM_STEP_DEGREES, ARM_STEP_VELOCITY);
+            armStepMoving = true;
+            armStepStartTime = pros::millis();
+        }
+        else if (!armStepMoving) {
             ArmLeft.brake();
             ArmRight.brake();
+        }
+
+        //arm times out after 300ms
+        if (armStepMoving && (pros::millis() - armStepStartTime) > 300) {
+            armStepMoving = false;
         }
 
         // =========================
