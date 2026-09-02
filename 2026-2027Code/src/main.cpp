@@ -15,6 +15,7 @@ pros::MotorGroup ArmRight({-12}, pros::MotorGearset::red); // right side of arm
 
 // Inertial Sensor on port 7
 pros::Imu imu(7);
+//hi
 
 // Pneumatic claw on ADI Port A
 pros::adi::DigitalOut claw('A');
