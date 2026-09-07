@@ -5,6 +5,7 @@
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
+pros::Rotation rotation(19);
 pros::MotorGroup leftMotors({4, 3, 5},
                             pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
 pros::MotorGroup rightMotors({-1, -2, -6}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
@@ -102,6 +103,9 @@ void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
     int stacklevel = 0; // sets the initial value for the stack level
+    rotation.reset_position(); // reset the rotation sensor to 0
+    rotation.reset(); // reset the rotation sensor to 0
+
 
     // Hold is okay at the final position, but for step movements we want
     // the motor to stop cleanly after a move_relative() command.
@@ -123,7 +127,9 @@ void initialize() {
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-
+            pros::lcd::print(3, "Rotation: %f", rotation.get_angle());
+            pros::lcd::print(4,"Tick Position: %ld \n", rotation.get_angle());
+            //Highest tick position: 25277
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
 
@@ -133,11 +139,11 @@ void initialize() {
     });
 }
 
-void clawOpen() {
+void clawClose() {
     claw.set_value(true);
 }
 
-void clawClose() {
+void clawOpen() {
     claw.set_value(false);
 }
 
@@ -192,6 +198,8 @@ void example_autonomous() {
 // Tune these numbers after testing on the real robot.
 const double ARM_STEP_DEGREES = 1000.0;
 const int ARM_STEP_VELOCITY = 100;
+int goal = 0;
+int stack = 1;
 uint32_t armTimeout = 2000; // Timeout in milliseconds
 
 void opcontrol() {
@@ -243,12 +251,36 @@ void opcontrol() {
             armStepStartTime = pros::millis();
             armTimeout = 2000; // Timeout in milliseconds
         }
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+            ArmLeft.move_relative(90*stack + goal, ARM_STEP_VELOCITY);
+            ArmRight.move_relative(90*stack + goal, ARM_STEP_VELOCITY);
+            armStepMoving = true;
+            armStepStartTime = pros::millis();
+            armTimeout = 300; // Timeout in milliseconds
+        }
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+            ArmLeft.move_absolute(0, ARM_STEP_VELOCITY);
+            ArmRight.move_absolute(0, ARM_STEP_VELOCITY);
+            armStepMoving = true;
+            armStepStartTime = pros::millis();
+            armTimeout = 2000; // Timeout in milliseconds
+        }
         else if (!armStepMoving) {
             ArmLeft.brake();
             ArmRight.brake();
         }
-
-
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+            if (goal >= 0 && goal < 2) {
+                goal++;
+            }
+            else {
+                goal = 0;
+            }
+        }
+        while (rotation.get_angle() > 2600) {
+            ArmLeft.brake();
+            ArmRight.brake();
+        }
         // =========================
         // Claw
         // X = Toggle
