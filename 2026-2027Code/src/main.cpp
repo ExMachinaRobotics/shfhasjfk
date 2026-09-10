@@ -1,6 +1,8 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 
+int goal = 0;
+int stack = 1;
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
@@ -121,6 +123,7 @@ void initialize() {
     // works, refer to the fmtlib docs
 
     // thread to for brain screen and position logging
+
     pros::Task screenTask([&]() {
         while (true) {
             // print robot location to the brain screen
@@ -130,6 +133,8 @@ void initialize() {
             pros::lcd::print(3, "Rotation: %f", rotation.get_angle());
             pros::lcd::print(4,"Tick Position: %ld \n", rotation.get_angle());
             pros::lcd::print(5,"Hold: %d \n",  Arm.get_brake_mode());
+            pros::lcd::print(6, "Goal: %d", goal);
+            pros::lcd::print(7, "Stack: %d", stack);
             //Highest tick position: 25277
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
@@ -199,8 +204,6 @@ void example_autonomous() {
 // Tune these numbers after testing on the real robot.
 const double ARM_STEP_DEGREES = 750.0;
 const int ARM_STEP_VELOCITY = 100;
-int goal = 0;
-int stack = 1;
 uint32_t armTimeout = 2000; // Timeout in milliseconds
 
 void opcontrol() {
@@ -253,31 +256,39 @@ void opcontrol() {
             armTimeout = 2000; // Timeout in milliseconds
         }
         else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
-            Arm.move_relative(90*stack + goal, ARM_STEP_VELOCITY);
-            //ArmRight.move_relative(90*stack + goal, ARM_STEP_VELOCITY);
+            if (goal == 1) {
+                goal = 0;
+            }
+            else {
+                goal++;
+            }
+        }
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+            Arm.move_relative(1000*stack + (goal*260), ARM_STEP_VELOCITY);
             armStepMoving = true;
             armStepStartTime = pros::millis();
             armTimeout = 300; // Timeout in milliseconds
-        }
-        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-            Arm.move_absolute(0, ARM_STEP_VELOCITY);
-           // ArmRight.move_absolute(0, ARM_STEP_VELOCITY);
-            armStepMoving = true;
-            armStepStartTime = pros::millis();
-            armTimeout = 2000; // Timeout in milliseconds
+                if (stack == 6) {
+                stack = 0;
+            }
+            else {
+                stack++;
+            }
         }
         else if (!armStepMoving) {
             Arm.brake();
            // ArmRight.brake();
         }
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-            if (goal >= 0 && goal < 2) {
-                goal++;
+
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {                      
+            if (stack == 6) {
+                stack = 0;
             }
             else {
-                goal = 0;
+                stack++;
             }
         }
+
         //while (rotation.get_angle() > 2600) {
             //Arm.brake();
             //ArmRight.brake();
