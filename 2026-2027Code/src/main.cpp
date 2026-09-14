@@ -3,6 +3,12 @@
 
 int goal = 0;
 int stack = 1;
+int reallevel = 0;
+
+void updateRealLevel() {
+    reallevel = 700 * stack + (goal * 260);
+}
+
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
@@ -104,10 +110,11 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
+    updateRealLevel();
     int stacklevel = 0; // sets the initial value for the stack level
     rotation.reset_position(); // reset the rotation sensor to 0
     rotation.reset(); // reset the rotation sensor to 0
-
+    Arm.set_zero_position(80); // sets the lowest position of the arm to __ degrees.
 
     // Hold is okay at the final position, but for step movements we want
     // the motor to stop cleanly after a move_relative() command.
@@ -130,11 +137,11 @@ void initialize() {
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            pros::lcd::print(3, "Rotation: %f", rotation.get_angle());
             pros::lcd::print(4,"Tick Position: %ld \n", rotation.get_angle());
             pros::lcd::print(5,"Hold: %d \n",  Arm.get_brake_mode());
             pros::lcd::print(6, "Goal: %d", goal);
             pros::lcd::print(7, "Stack: %d", stack);
+            pros::lcd::print(3, "Real Level: %d", reallevel);
             //Highest tick position: 25277
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
@@ -200,6 +207,9 @@ void example_autonomous() {
     pros::lcd::print(4, "pure pursuit finished!");
 }
 
+void autonomous() {
+    
+}
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
 const double ARM_STEP_DEGREES = 750.0;
@@ -248,8 +258,8 @@ void opcontrol() {
             armStepStartTime = pros::millis();
             armTimeout = 2000; // Timeout in milliseconds
         }
-        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            Arm.move_absolute(0, ARM_STEP_VELOCITY);
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+            Arm.move_absolute(8, ARM_STEP_VELOCITY);
            // ArmRight.move_absolute(0, ARM_STEP_VELOCITY);
             armStepMoving = true;
             armStepStartTime = pros::millis();
@@ -262,37 +272,42 @@ void opcontrol() {
             else {
                 goal++;
             }
+            updateRealLevel();
         }
-        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-            Arm.move_relative(1000*stack + (goal*260), ARM_STEP_VELOCITY);
+        // else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {                      
+
+        // }
+        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)) {
+            updateRealLevel();
+            if (stack == 4 || stack == 5) {
+                Arm.move_absolute(625 * stack + (goal * 260), ARM_STEP_VELOCITY);
+                armStepMoving = true;
+                armStepStartTime = pros::millis();
+                armTimeout = 10000; // Timeout in milliseconds   
+            }
+            else{
+            Arm.move_absolute(reallevel, ARM_STEP_VELOCITY);
             armStepMoving = true;
             armStepStartTime = pros::millis();
-            armTimeout = 300; // Timeout in milliseconds
-                if (stack == 6) {
+            armTimeout = 10000; // Timeout in milliseconds
+                        if (stack == 6) {
                 stack = 0;
             }
             else {
                 stack++;
             }
+            updateRealLevel();
+            }
+                
         }
+
         else if (!armStepMoving) {
             Arm.brake();
            // ArmRight.brake();
         }
 
-        else if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {                      
-            if (stack == 6) {
-                stack = 0;
-            }
-            else {
-                stack++;
-            }
-        }
 
-        //while (rotation.get_angle() > 2600) {
-            //Arm.brake();
-            //ArmRight.brake();
-        //}
+ 
         // =========================
         // Claw
         // X = Toggle
@@ -300,12 +315,12 @@ void opcontrol() {
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)) {
             clawOpenState = !clawOpenState;
             if (clawOpenState) {
-                clawOpen();
+                clawClose();
             }
             else {
-                clawClose();
+                clawOpen();                 
                 Arm.move_relative(90.0, ARM_STEP_VELOCITY);
-          //      ArmRight.move_relative(90.0, ARM_STEP_VELOCITY);
+          //      ArmRcight.move_relative(90.0, ARM_STEP_VELOCITY);
                 armStepMoving = true;
                 armStepStartTime = pros::millis();
                 armTimeout = 300; // Timeout in milliseconds
