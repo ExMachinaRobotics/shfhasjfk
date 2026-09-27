@@ -15,16 +15,15 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 // motor groups
 pros::Rotation rotation(19);
 pros::MotorGroup leftMotors({4, 3, 5},
-                            pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
+pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
 pros::MotorGroup rightMotors({-1, -2, -6}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
 // ARM - 2 motors total
 pros::MotorGroup Arm({11, -12}, pros::MotorGearset::red); // left side of arm
 // pros::MotorGroup ArmRight({-12}, pros::MotorGearset::red); // right side of arm
 
-// Inertial Sensor on port 7
-pros::Imu imu(7);
-//hi
+// Inertial Sensor on port 10
+pros::Imu imu(10);
 
 // Pneumatic claw on ADI Port A
 pros::adi::DigitalOut claw('A');
@@ -109,6 +108,7 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
  */
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
+    pros::delay(2000); // wait for the IMU to calibrate
     chassis.calibrate(); // calibrate sensors
     updateRealLevel();
     int stacklevel = 0; // sets the initial value for the stack level
@@ -135,13 +135,14 @@ void initialize() {
         while (true) {
             // print robot location to the brain screen
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+            pros::lcd::print(1, "Heading: %f", chassis.getPose().theta); // heading
+            pros::lcd::print(2, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(3, "Theta: %f", chassis.getPose().theta); // heading
             pros::lcd::print(4,"Tick Position: %ld \n", rotation.get_angle());
             pros::lcd::print(5,"Hold: %d \n",  Arm.get_brake_mode());
             pros::lcd::print(6, "Goal: %d", goal);
             pros::lcd::print(7, "Stack: %d", stack);
-            pros::lcd::print(3, "Real Level: %d", reallevel);
+            pros::lcd::print(8, "Real Level: %d", reallevel);
             //Highest tick position: 25277
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
@@ -152,6 +153,7 @@ void initialize() {
     });
 }
 
+ 
 void clawClose() {
     claw.set_value(true);
 }
@@ -211,7 +213,38 @@ void autonomous() {
     // set position to x:0, y:0, heading:0
     chassis.setPose(0, 0, 0);
     // turn to face heading 90 with a very long timeout
-    chassis.moveToPoint(0, 36, 100000);
+    chassis.turnToHeading(90, 100000);
+
+    /*Arm.set_zero_position(Arm.get_position());
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+
+    Arm.move_absolute(1500,100);
+    pros::delay(1000);
+    Arm.move_absolute(0,100);
+    pros::delay(1000);
+    Arm.move_absolute(1500,100);
+    pros::delay(1000);
+    Arm.move_absolute(0,100);
+    pros::delay(1000);
+
+    chassis.moveToPoint(0, 24, 1000);
+    chassis.turnToHeading(-90, 1000);
+    chassis.moveToPoint(-19, 24, 1000);*/
+    clawOpen();
+
+    /* turn to face heading 90 with a very long timeout
+    chassis.moveToPoint(8, 0, 1000);
+    chassis.waitUntilDone();
+    pros::delay(1000);
+    chassis.moveToPoint(-8, 0, 1000);
+    chassis.waitUntilDone();
+    chassis.moveToPoint(0, -4, 1000);
+    chassis.waitUntilDone();
+    chassis.moveToPoint(0, 8, 1000);
+    chassis.waitUntilDone();*/
+
+    // chassis.moveToPoint(0, -15, 1000);
+    // chassis.waitUntilDone();
 }
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
@@ -228,6 +261,7 @@ void opcontrol() {
     uint32_t armStepStartTime = 0;
 
     while (true) {
+        controller.set_text(0, 0, std::to_string(chassis.getPose().theta));
         // =========================
         // Drive
         // =========================
