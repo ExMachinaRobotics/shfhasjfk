@@ -209,6 +209,7 @@ void example_autonomous() {
 }
 
 void autonomous() {
+    chassis.setPose(0, 0, 0);
     chassis.moveToPoint(0, 5, 1000, {.forwards = true});
     chassis.turnToPoint(-24, 24, 1000);
     // set position to x:0, y:0, heading:0
