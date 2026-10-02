@@ -213,6 +213,8 @@ void autonomous() {
     // set position to x:0, y:0, heading:0
     chassis.setPose(0, 0, 0);
     // turn to face heading 90 with a very long timeout
+    chassis.moveToPoint(24, 0, 1000);
+    pros::delay(2500);
     chassis.turnToHeading(90, 100000);
 
     /*Arm.set_zero_position(Arm.get_position());
