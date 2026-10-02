@@ -6,7 +6,7 @@ int stack = 1;
 int reallevel = 0;
 
 void updateRealLevel() {
-    reallevel = 800 * stack + (goal * 260);
+    reallevel = 700 * stack + (goal * 260);
 }
 
 // controller
@@ -108,6 +108,7 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
  */
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
+    pros::delay(2000); // wait for the IMU to calibrate
     chassis.calibrate(); // calibrate sensors
     updateRealLevel();
     int stacklevel = 0; // sets the initial value for the stack level
@@ -209,54 +210,27 @@ void example_autonomous() {
 }
 
 void autonomous() {
-    chassis.moveToPoint(0, 24, 1000, {.forwards = true});
-    pros::wait(5000);
-    chassis.turnToPoint(-24, 24, 1000);
     // set position to x:0, y:0, heading:0
-    /*chassis.setPose(0, 0, 0);
+    chassis.setPose(0, 0, 0);
     // turn to face heading 90 with a very long timeout
-    Arm.set_zero_position(Arm.get_position());
+    chassis.turnToHeading(90, 100000);
+
+    /*Arm.set_zero_position(Arm.get_position());
     Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+
     Arm.move_absolute(1500,100);
-    pros::delay(500);
+    pros::delay(1000);
     Arm.move_absolute(0,100);
-    pros::delay(500);
+    pros::delay(1000);
     Arm.move_absolute(1500,100);
-    pros::delay(500);
+    pros::delay(1000);
     Arm.move_absolute(0,100);
-    chassis.turnToPoint(-17, 9.6, 1000);
-    chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});
+    pros::delay(1000);
+
+    chassis.moveToPoint(0, 24, 1000);
+    chassis.turnToHeading(-90, 1000);
+    chassis.moveToPoint(-19, 24, 1000);*/
     clawOpen();
-    chassis.moveToPoint(-14, 6.6, 1000, {.forwards = false});
-    chassis.turnToPoint(-29.25, -12.9, 1000);
-    chassis.moveToPoint(-29.25, -12.9, 1000, {.forwards = true});
-    clawClose();
-    chassis.moveToPoint(-15.28, 1.56, 1000, {.forwards = false});
-    bool async = false;
-    chassis.turnToPoint(-24.24, 3.19, 1000);
-    Arm.move_absolute(800,100);
-    bool async = true;
-    chassis.moveToPoint(-24.24, 3.19, 1000);
-    Arm.move_absolute(800,100);
-    pros::delay(250);
-    Arm.move_absolute(700,100);
-    clawOpen();
-    Arm.move_absolute(0,100);
-    chassis.moveToPoint(-17.47, 3.63, 1000, {.forwards = false});
-    chassis.turnToPoint(-21.64, 21.34, 1000);
-    chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = true});
-    clawClose();
-    bool async = false;
-    chassis.turnToPoint(-23.13, 7.43 , 1000);
-    Arm.move_absolute(1600,100);
-    bool async = true;
-    chassis.moveToPoint(-23.13, 7.43 , 1000);
-    Arm.move_absolute(1500,100);
-    clawOpen();
-    bool async = false;
-    chassis.moveToPoint(-21.21, 19.37, 1000, {.forwards = false});
-    Arm.move_absolute(0,100);
-    bool async = true;  */  
 
     /* turn to face heading 90 with a very long timeout
     chassis.moveToPoint(8, 0, 1000);
