@@ -214,7 +214,7 @@ void autonomous() {
     chassis.setPose(0, 0, 0);
     chassis.moveToPoint(0,10, 1000);
     pros::delay(2000);
-    chassis.turnToPoint(10, 10, 1000, {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
+    chassis.turnToHeading(90, 100000);
 }
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
