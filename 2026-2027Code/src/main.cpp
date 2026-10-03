@@ -22,8 +22,8 @@ pros::MotorGroup rightMotors({-1, -2, -6}, pros::MotorGearset::blue); // right m
 pros::MotorGroup Arm({11, -12}, pros::MotorGearset::red); // left side of arm
 // pros::MotorGroup ArmRight({-12}, pros::MotorGearset::red); // right side of arm
 
-// Inertial Sensor on port 7
-pros::Imu imu(7);
+// Inertial Sensor on port 10
+pros::Imu imu(10);
 //hi
 
 // Pneumatic claw on ADI Port A
@@ -137,11 +137,12 @@ void initialize() {
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            pros::lcd::print(4,"Tick Position: %ld \n", rotation.get_angle());
-            pros::lcd::print(5,"Hold: %d \n",  Arm.get_brake_mode());
-            pros::lcd::print(6, "Goal: %d", goal);
-            pros::lcd::print(7, "Stack: %d", stack);
-            pros::lcd::print(3, "Real Level: %d", reallevel);
+            pros::lcd::print(4, "IMU Heading: %.2f", imu.get_heading());
+            pros::lcd::print(5, "Hold: %d \n", Arm.get_brake_mode());
+
+            // pros::lcd::print(6, "Goal: %d", goal);
+            // pros::lcd::print(7, "Stack: %d", stack);
+            // pros::lcd::print(3, "Real Level: %d", reallevel);
             //Highest tick position: 25277
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
@@ -208,10 +209,12 @@ void example_autonomous() {
 }
 
 void autonomous() {
-    // set position to x:0, y:0, heading:0
+    chassis.calibrate(); // calibrate sensors
+    pros::delay(2000); // wait for calibration to finish
     chassis.setPose(0, 0, 0);
-    // turn to face heading 90 with a very long timeout
-    chassis.moveToPoint(0, 36, 100000);
+    chassis.moveToPoint(0,10, 1000);
+    pros::delay(2000);
+    chassis.turnToHeading(-90, 3000,{.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
 }
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
