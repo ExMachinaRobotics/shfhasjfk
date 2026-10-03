@@ -195,7 +195,7 @@ void example_autonomous() {
     chassis.turnToPoint(45, -45, 1000, {.maxSpeed = 60});
 
     // Turn to face a direction of 90º. Timeout set to 1000
-    chassis.turnToHeading(90, 1000, {.direction = AngularDirection::CW_CLOCKWISE, .minSpeed = 100});
+    chassis.turnToPoint(90, 1000, 1000, {.direction = AngularDirection::CW_CLOCKWISE, .minSpeed = 100});
 
     // Follow the path in path.txt
     chassis.follow(example_txt, 15, 4000, false);
@@ -214,7 +214,7 @@ void autonomous() {
     chassis.setPose(0, 0, 0);
     chassis.moveToPoint(0,10, 1000);
     pros::delay(2000);
-    chassis.turnToHeading(-90, 3000,{.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
+    chassis.turnToPoint(10, 10, 1000, {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
 }
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
