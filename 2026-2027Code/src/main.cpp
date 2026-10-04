@@ -215,15 +215,20 @@ void autonomous() {
     Arm.move_absolute(1600,100);
     pros::delay(850);
     Arm.move_absolute(0,100);
-    pros::delay(800);
+    pros::delay(850);
     // Arm.move_absolute(1500,1000);
     // Arm.move_absolute(0,1000);
-    chassis.moveToPoint(0, 12 ,1000, {.forwards = true});
-    chassis.turnToHeading(74, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
-    chassis.setPose(0 ,0 ,0);
-    imu.reset();
+    chassis.moveToPoint(0, 12 ,1000, {.forwards = true});  
+  //  chassis.moveToPoint(0, 15 ,1000, {.forwards = true}); 
+  //  chassis.turnToHeading(74, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
+  //  chassis.turnToPoint(16.5, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 25});
+    chassis.turnToHeading(90, 1000, {.direction = AngularDirection::CW_CLOCKWISE, .minSpeed = 100});
+ //   chassis.setPose(0 ,0 ,0);
+//    imu.reset();
     pros::delay(5000);
-    chassis.moveToPoint(0, 24 ,1000, {.forwards = true});
+    chassis.moveToPoint(24, 0,1000, {.forwards = true});
+    clawOpen();
+
 //    clawOpen();
 //     chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});
 //     clawOpen();
