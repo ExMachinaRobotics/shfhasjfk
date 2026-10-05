@@ -220,7 +220,7 @@ void autonomous() {
     Arm.move_absolute(0,1000);
     chassis.moveToPoint(0, 24 ,2000, {.forwards = true, .maxSpeed = 50});  
   //  chassis.moveToPoint(0, 15 ,1000, {.forwards = true}); 
-    // chassis.turnToHeading(-90, 5000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 20});
+    chassis.turnToHeading(-90, 1500, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 30});
     // chassis.setPose(0 ,0 ,-90);
     // pros::delay(3000);
     // chassis.moveToPoint(0, 16.5, 1000, {.forwards = true});
