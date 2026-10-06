@@ -4,6 +4,8 @@
 int goal = 0;
 int stack = 1;
 int reallevel = 0;
+FILE* logfile = nullptr;
+int flushCounter = 0;
 
 void updateRealLevel() {
     reallevel = 800 * stack + (goal * 260);
@@ -33,15 +35,15 @@ pros::adi::DigitalOut claw('A');
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
 pros::Rotation horizontalEnc(20);
 
-// vertical tracking wheel encoder, port 17, reversed
-pros::Rotation verticalEnc(17);
+// vertical tracking wheel encoder, port 13, reversed
+pros::Rotation verticalEnc(13);
 
-/* horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
-lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -5.75);
+// horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
+// lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -5.75);
 
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
-lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, -2.5);
-*/
+// lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, -2.5);
+
 
 
 // drivetrain settings
@@ -108,8 +110,17 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
  * to keep execution time for tis mode under a few seconds.
  */
 void initialize() {
+    if (pros::usd::is_installed()) {
+        pros::lcd::print(6, "USB drive installed");
+    } else {
+        pros::lcd::print(6, "USB drive not installed");
+    }
     pros::lcd::initialize(); // initialize brain screen
-    chassis.calibrate(); // calibrate sensors
+    chassis.calibrate(); // calibrate the chassis
+    // chassis.calibrate(); // calibrate sensors
+    while (imu.is_calibrating()) { // wait for the IMU to finish calibrating
+        pros::delay(1000);
+    }
     updateRealLevel();
     int stacklevel = 0; // sets the initial value for the stack level
     rotation.reset_position(); // reset the rotation sensor to 0
@@ -130,8 +141,18 @@ void initialize() {
     // works, refer to the fmtlib docs
 
     // thread to for brain screen and position logging
+    
+    if (pros::usd::is_installed()) {
+      logfile = fopen("/usd/robot_log.csv", "w");  
+      if (!logfile) {
+        pros::lcd::print(7, "Failed to open logfile");
+      } else {
+        pros::lcd::print(7, "Logfile opened");
+      }
+    }  
 
     pros::Task screenTask([&]() {
+        flushCounter = 0;
         while (true) {
             // print robot location to the brain screen
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
@@ -139,7 +160,24 @@ void initialize() {
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
             pros::lcd::print(4, "IMU Heading: %.2f", imu.get_heading());
             pros::lcd::print(5, "Hold: %d \n", Arm.get_brake_mode());
+            printf("X: %f\n", chassis.getPose().x);
+            printf("Y: %f\n", chassis.getPose().y);
+            printf("Theta: %f\n", chassis.getPose().theta);
 
+            if (logfile != nullptr) {
+                fprintf(logfile, "Time: %f\n", pros::millis() / 1000.0);
+                fprintf(logfile, "X: %f\n", chassis.getPose().x);
+                fprintf(logfile, "Y: %f\n", chassis.getPose().y);
+                fprintf(logfile, "Theta: %f\n", chassis.getPose().theta);
+                fprintf(logfile, "IMU Heading: %.2f\n", imu.get_heading());
+                fprintf(logfile, "Hold: %d \n", imu.get_rotation());
+                fprintf(logfile, "Rotation: %.2f \n", imu.get_gyro_rate().z);
+            }
+            flushCounter++;
+            if (flushCounter >= 50) {
+                fflush(logfile);
+                flushCounter = 0;
+            }
             // pros::lcd::print(6, "Goal: %d", goal);
             // pros::lcd::print(7, "Stack: %d", stack);
             // pros::lcd::print(3, "Real Level: %d", reallevel);
@@ -210,17 +248,17 @@ void example_autonomous() {
 
 void autonomous() {
     chassis.setPose(0, 9, 0);
-    Arm.set_zero_position(Arm.get_position());
-    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-    Arm.move_absolute(1600,100);
-    pros::delay(850);
-    Arm.move_absolute(0,100);
-    pros::delay(850);
-    Arm.move_absolute(1500,1000);
-    Arm.move_absolute(0,1000);
-    chassis.moveToPoint(0, 24 ,2000, {.forwards = true, .maxSpeed = 50});  
+    // Arm.set_zero_position(Arm.get_position());
+    // Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+    // Arm.move_absolute(1600,1000);
+    // pros::delay(850);
+    // Arm.move_absolute(0,1000);
+    // pros::delay(850);
+    // Arm.move_absolute(1500,1000);
+    // Arm.move_absolute(0,1000);
+    chassis.moveToPoint(0, 50, 5000, {.forwards = true, .maxSpeed = 50});  
   //  chassis.moveToPoint(0, 15 ,1000, {.forwards = true}); 
-    chassis.turnToHeading(-90, 1500, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 30});
+   // chassis.turnToHeading(90, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 30});
     // chassis.setPose(0 ,0 ,-90);
     // pros::delay(3000);
     // chassis.moveToPoint(0, 16.5, 1000, {.forwards = true});
