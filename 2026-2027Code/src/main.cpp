@@ -33,16 +33,16 @@ pros::adi::DigitalOut claw('A');
 
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
-pros::Rotation horizontalEnc(20);
+pros::Rotation horizontalEnc(14);
 
-// vertical tracking wheel encoder, port 13, reversed
+// vertical tracking wheel encoder, port 13, not reversed
 pros::Rotation verticalEnc(13);
 
 // horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
-// lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -5.75);
+lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -3.5);
 
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
-// lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, -2.5);
+lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 0.5);
 
 
 
@@ -80,9 +80,9 @@ lemlib::ControllerSettings angularController(10.218, // proportional gain (kP)
 );
 
 // sensors for odometry
-lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
+lemlib::OdomSensors sensors(&vertical, // vertical tracking wheel
                             nullptr, // vertical tracking wheel 2, set to nullptr as we don't have a second one
-                            nullptr, // horizontal tracking wheel
+                            &horizontal, // horizontal tracking wheel
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
                             &imu // inertial sensor
 );
@@ -248,28 +248,20 @@ void example_autonomous() {
 
 void autonomous() {
     chassis.setPose(0, 9, 0);
-    // Arm.set_zero_position(Arm.get_position());
-    // Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-    // Arm.move_absolute(1600,1000);
-    // pros::delay(850);
-    // Arm.move_absolute(0,1000);
-    // pros::delay(850);
-    // Arm.move_absolute(1500,1000);
-    // Arm.move_absolute(0,1000);
-    chassis.moveToPoint(0, 50, 5000, {.forwards = true, .maxSpeed = 50});  
-  //  chassis.moveToPoint(0, 15 ,1000, {.forwards = true}); 
-   // chassis.turnToHeading(90, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 30});
-    // chassis.setPose(0 ,0 ,-90);
-    // pros::delay(3000);
-    // chassis.moveToPoint(0, 16.5, 1000, {.forwards = true});
-   // chassis.turnToHeading(90, 5000, {.direction = AngularDirection::CW_CLOCKWISE});
-//    imu.reset();
- //   pros::delay(5000);
-   // chassis.moveToPoint(24, 0,1000, {.forwards = true});
-    //clawOpen();
+    Arm.set_zero_position(Arm.get_position());
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+    Arm.move_absolute(1600,1000);
+    pros::delay(850);
+    Arm.move_absolute(0,1000);
+    pros::delay(850);
+    Arm.move_absolute(1500,1000);
+    Arm.move_absolute(0,1000);
+    chassis.moveToPoint(0, 24, 5000, {.forwards = true, .maxSpeed = 75});
+    chassis.turnToPoint(-24, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 75});
 
     // HALF AWP
 
+    //chassis.turnToPoint(-22, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
     // chassis.turnToPoint(-17, 9.6, 1000);    
     // chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});    
     // clawOpen();
@@ -455,7 +447,7 @@ void opcontrol() {
             }
             else {
                 clawOpen();                 
-                Arm.move_relative(90.0, ARM_STEP_VELOCITY);
+                Arm.move_relative(350.0, ARM_STEP_VELOCITY);
           //      ArmRcight.move_relative(90.0, ARM_STEP_VELOCITY);
                 armStepMoving = true;
                 armStepStartTime = pros::millis();
