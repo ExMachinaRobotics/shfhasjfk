@@ -33,16 +33,16 @@ pros::adi::DigitalOut claw('A');
 
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
-pros::Rotation horizontalEnc(14);
+pros::Rotation horizontalEnc(9);
 
-// vertical tracking wheel encoder, port 13, not reversed
-pros::Rotation verticalEnc(13);
+// vertical tracking wheel encoder, port 13, reversed
+pros::Rotation verticalEnc(-13);
 
 // horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
-lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, -3.5);
+lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, 3.5);
 
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
-lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 0.5);
+lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 0);
 
 
 
@@ -229,6 +229,7 @@ void example_autonomous() {
     chassis.waitUntil(10);
     chassis.cancelMotion();
 
+
     // Turn to face the point x:45, y:-45. Timeout set to 1000
     chassis.turnToPoint(45, -45, 1000, {.maxSpeed = 60});
 
@@ -245,9 +246,73 @@ void example_autonomous() {
     chassis.waitUntilDone();
     pros::lcd::print(4, "pure pursuit finished!");
 }
+void HALF_AWP() {
+    chassis.turnToPoint(-22, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.turnToPoint(-17, 9.6, 1000);    
+    chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});    
+    clawOpen();
+    chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});
+    clawOpen();
+    chassis.moveToPoint(-14, 6.6, 1000, {.forwards = false});
+    chassis.turnToPoint(-29.25, -12.9, 1000);
+    chassis.moveToPoint(-29.25, -12.9, 1000, {.forwards = true});
+    clawClose();
+    chassis.moveToPoint(-15.28, 1.56, 1000, {.forwards = false});
+    chassis.turnToPoint(-24.24, 3.19, 1000);
+    Arm.move_absolute(800,100);
+    chassis.moveToPoint(-24.24, 3.19, 1000);
+    Arm.move_absolute(800,100);
+    pros::delay(250);
+    Arm.move_absolute(700,100);
+    clawOpen();
+    Arm.move_absolute(0,100);
+    chassis.moveToPoint(-17.47, 3.63, 1000, {.forwards = false});
+    chassis.turnToPoint(-21.64, 21.34, 1000);
+    chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = true});
+    clawClose();
+    chassis.turnToPoint(-23.13, 7.43 , 1000);
+    Arm.move_absolute(1600,100);
+    chassis.moveToPoint(-23.13, 7.43 , 1000);
+    Arm.move_absolute(1500,100);
+    clawOpen();
+    chassis.moveToPoint(-21.21, 19.37, 1000, {.forwards = false});
+    Arm.move_absolute(0,100);
+}
+void ELIMS_NEITHER_PIN() {
+    chassis.turnToPoint(-17, 9.6, 1000);    
+    chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});    
+    clawOpen();
+    chassis.moveToPoint(-17.47, 3.63, 1000, {.forwards = false});
+    chassis.turnToPoint(-21.64, 21.34, 1000);
+    chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = true});
+    clawClose();
+    chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = false});
+    chassis.turnToPoint(-23.13, 7.43 , 1000);
+    Arm.move_absolute(800,100);
+    chassis.moveToPoint(-23.13, 7.43 , 1000);
+    Arm.move_absolute(100,100);
+    clawOpen();
+    chassis.moveToPoint(-21.21, 19.37, 1000, {.forwards = false});
+    Arm.move_absolute(0,100);
+    chassis.turnToPoint(-21.21, 0, 1000);
+    chassis.moveToPoint(-21.21, 0, 1000);
+    clawClose();
+    chassis.turnToPoint(-21.21, 19.37, 1000);
+    Arm.move_absolute(800,100);
+    chassis.moveToPoint(-21.21, 19.37, 1000);
+    Arm.move_absolute(100,100);
+    clawOpen();
+    Arm.move_absolute(0,100);
+    chassis.moveToPoint(-21.21, 0, 1000, {.forwards = false});
+    chassis.turnToPoint(-21.21, 19.37, 1000);
+    chassis.moveToPoint(-21.21, 19.37, 1000);
+}
 
 void autonomous() {
     chassis.setPose(0, 9, 0);
+
+    //Step 1: lift up and down
+
     Arm.set_zero_position(Arm.get_position());
     Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
     Arm.move_absolute(1600,1000);
@@ -256,73 +321,21 @@ void autonomous() {
     pros::delay(850);
     Arm.move_absolute(1500,1000);
     Arm.move_absolute(0,1000);
-    chassis.moveToPoint(0, 24, 5000, {.forwards = true, .maxSpeed = 75});
-    chassis.turnToPoint(-24, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 75});
 
-    // HALF AWP
+    //Step 2:  set position and move forward
+    //chassis.setPose(0, 9, 0);
+    chassis.moveToPoint(0, 30, 1000, {.forwards = true, .maxSpeed = 100});
 
-    //chassis.turnToPoint(-22, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
-    // chassis.turnToPoint(-17, 9.6, 1000);    
-    // chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});    
-    // clawOpen();
-    // chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});
-    // clawOpen();
-    // chassis.moveToPoint(-14, 6.6, 1000, {.forwards = false});
-    // chassis.turnToPoint(-29.25, -12.9, 1000);
-    // chassis.moveToPoint(-29.25, -12.9, 1000, {.forwards = true});
-    // clawClose();
-    // chassis.moveToPoint(-15.28, 1.56, 1000, {.forwards = false});
-    // chassis.turnToPoint(-24.24, 3.19, 1000);
-    // Arm.move_absolute(800,100);
-    // chassis.moveToPoint(-24.24, 3.19, 1000);
-    // Arm.move_absolute(800,100);
-    // pros::delay(250);
-    // Arm.move_absolute(700,100);
-    // clawOpen();
-    // Arm.move_absolute(0,100);
-    // chassis.moveToPoint(-17.47, 3.63, 1000, {.forwards = false});
-    // chassis.turnToPoint(-21.64, 21.34, 1000);
-    // chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = true});
-    // clawClose();
-    // chassis.turnToPoint(-23.13, 7.43 , 1000);
-    // Arm.move_absolute(1600,100);
-    // chassis.moveToPoint(-23.13, 7.43 , 1000);
-    // Arm.move_absolute(1500,100);
-    // clawOpen();
-    // chassis.moveToPoint(-21.21, 19.37, 1000, {.forwards = false});
-    // Arm.move_absolute(0,100);
+    //Step 3: Turn 90 degrees
 
+    // chassis.turnToHeading(295, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 50});
+    // chassis.setPose(0, 0, 0);
+    // imu.set_heading(0);
+    // pros::delay(4000);
+    //chassis.moveToPoint(22, 22, 1000, {.forwards = true, .maxSpeed = 100});
 
-    // ELIMS NOT GOING FOR EITHER PIN
-    
-    // chassis.turnToPoint(-17, 9.6, 1000);    
-    // chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});    
+    // Drop the preloaded pin into the goal
     // clawOpen();
-    // chassis.moveToPoint(-17.47, 3.63, 1000, {.forwards = false});
-    // chassis.turnToPoint(-21.64, 21.34, 1000);
-    // chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = true});
-    // clawClose();
-    // chassis.moveToPoint(-21.64, 21.34, 1000, {.forwards = false});
-    // chassis.turnToPoint(-23.13, 7.43 , 1000);
-    // Arm.move_absolute(800,100);
-    // chassis.moveToPoint(-23.13, 7.43 , 1000);
-    // Arm.move_absolute(100,100);
-    // clawOpen();
-    // chassis.moveToPoint(-21.21, 19.37, 1000, {.forwards = false});
-    // Arm.move_absolute(0,100);
-    // chassis.turnToPoint(-21.21, 0, 1000);
-    // chassis.moveToPoint(-21.21, 0, 1000);
-    // clawClose();
-    // chassis.turnToPoint(-21.21, 19.37, 1000);
-    // Arm.move_absolute(800,100);
-    // chassis.moveToPoint(-21.21, 19.37, 1000);
-    // Arm.move_absolute(100,100);
-    // clawOpen();
-    // Arm.move_absolute(0,100);
-    // chassis.moveToPoint(-21.21, 0, 1000, {.forwards = false});
-    // chassis.turnToPoint(-21.21, 19.37, 1000);
-    // chassis.moveToPoint(-21.21, 19.37, 1000);
-
 
     /* turn to face heading 90 with a very long timeout
     chassis.moveToPoint(8, 0, 1000);
