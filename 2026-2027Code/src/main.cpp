@@ -16,9 +16,9 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
 pros::Rotation rotation(19);
-pros::MotorGroup leftMotors({4, 3, 5},
+pros::MotorGroup leftMotors({-1, -2, -6},
                             pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
-pros::MotorGroup rightMotors({-1, -2, -6}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
+pros::MotorGroup rightMotors({3, 4, 5}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
 // ARM - 2 motors total
 pros::MotorGroup Arm({11, -12}, pros::MotorGearset::red); // left side of arm
@@ -316,20 +316,18 @@ void autonomous() {
 
     //Step 1: lift up and down
 
-    Arm.set_zero_position(Arm.get_position());
-    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-    Arm.move_absolute(1600,1000);
-    pros::delay(850);
-    Arm.move_absolute(0,1000);
-    pros::delay(850);
-    Arm.move_absolute(1500,1000);
-    Arm.move_absolute(0,1000);
+    // Arm.set_zero_position(Arm.get_position());
+    // Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+    // Arm.move_absolute(1600,1000);
+    // pros::delay(850);
+    // Arm.move_absolute(0,1000);
+    // pros::delay(850);
+    // Arm.move_absolute(1500,1000);
+    // Arm.move_absolute(0,1000);
 
     //Step 2:  set position and move forward
     //chassis.setPose(0, 9, 0);
-    //chassis.moveToPoint(0, 30, 1000, {.forwards = true, .maxSpeed = 100});
-    rightMotors.move_absolute(1, 1000);
-    leftMotors.move_absolute(1, 1000);
+    chassis.moveToPoint(0, 24, 1000);
     //Step 3: Turn 90 degrees
 
     // chassis.turnToHeading(295, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 50});
@@ -376,7 +374,7 @@ void opcontrol() {
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-        chassis.arcade(leftY, -rightX * 0.75);
+        chassis.arcade(leftY, rightX * 0.75);
 
         // =========================
         // Arm
