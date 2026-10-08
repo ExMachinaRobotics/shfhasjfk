@@ -312,7 +312,7 @@ void ELIMS_NEITHER_PIN() {
 }
 
 void autonomous() {
-    chassis.setPose(0, 0, 0);
+    chassis.setPose(0, 9, 0);
 
     //Step 1: lift up and down
 
@@ -327,14 +327,14 @@ void autonomous() {
 
     //Step 2:  set position and move forward
     //chassis.setPose(0, 9, 0);
-    chassis.moveToPoint(0, 24, 1000);
+    chassis.moveToPoint(0, 24, 1000, {.maxSpeed = 50});
     //Step 3: Turn 90 degrees
-
-    // chassis.turnToHeading(295, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 50});
+    pros::delay(3000);
+    chassis.turnToHeading(90, 1000, {.maxSpeed = 50});
     // chassis.setPose(0, 0, 0);
     // imu.set_heading(0);
     // pros::delay(4000);
-    //chassis.moveToPoint(22, 22, 1000, {.forwards = true, .maxSpeed = 100});
+    chassis.moveToPoint(24, 24, 1000, {.forwards = true, .maxSpeed = 100});
 
     // Drop the preloaded pin into the goal
     // clawOpen();
