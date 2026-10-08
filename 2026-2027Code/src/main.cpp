@@ -116,12 +116,15 @@ void initialize() {
         pros::lcd::print(6, "USB drive not installed");
     }
     pros::lcd::initialize(); // initialize brain screen
+   
     chassis.calibrate(); // calibrate the chassis
-    // chassis.calibrate(); // calibrate sensors
+    
     while (imu.is_calibrating()) { // wait for the IMU to finish calibrating
         pros::delay(1000);
     }
+   
     updateRealLevel();
+    
     int stacklevel = 0; // sets the initial value for the stack level
     rotation.reset_position(); // reset the rotation sensor to 0
     rotation.reset(); // reset the rotation sensor to 0
@@ -309,7 +312,7 @@ void ELIMS_NEITHER_PIN() {
 }
 
 void autonomous() {
-    chassis.setPose(0, 9, 0);
+    chassis.setPose(0, 0, 0);
 
     //Step 1: lift up and down
 
@@ -324,8 +327,9 @@ void autonomous() {
 
     //Step 2:  set position and move forward
     //chassis.setPose(0, 9, 0);
-    chassis.moveToPoint(0, 30, 1000, {.forwards = true, .maxSpeed = 100});
-
+    //chassis.moveToPoint(0, 30, 1000, {.forwards = true, .maxSpeed = 100});
+    rightMotors.move_absolute(1, 1000);
+    leftMotors.move_absolute(1, 1000);
     //Step 3: Turn 90 degrees
 
     // chassis.turnToHeading(295, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE, .maxSpeed = 50});
