@@ -39,7 +39,7 @@ pros::Rotation horizontalEnc(9);
 pros::Rotation verticalEnc(-13);
 
 // horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
-lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, 3.5);
+// lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_275, 3.5);
 
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 0);
@@ -56,33 +56,33 @@ lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
 );
 
 // lateral motion controller
-lemlib::ControllerSettings linearController(121.3, // proportional gain (kP)
+lemlib::ControllerSettings linearController(10.25, // proportional gain (kP)
                                             0, // integral gain (kI)
-                                            10, // derivative gain (kD)
-                                            3, // anti windup
-                                            1, // small error range, in inches
-                                            100, // small error range timeout, in milliseconds
-                                            3, // large error range, in inches
-                                            500, // large error range timeout, in milliseconds
-                                            20 // maximum acceleration (slew)
+                                            5, // derivative gain (kD)
+                                            0, // anti windup
+                                            0, // small error range, in inches
+                                            0, // small error range timeout, in milliseconds
+                                            0, // large error range, in inches
+                                            0, // large error range timeout, in milliseconds
+                                            0 // maximum acceleration (slew)
 );
 
 // angular motion controller
-lemlib::ControllerSettings angularController(10.218, // proportional gain (kP)
+lemlib::ControllerSettings angularController(2, // proportional gain (kP)
                                              0, // integral gain (kI)
-                                             12, // derivative gain (kD)
-                                             3, // anti windup
-                                             1, // small error range, in degrees
-                                             100, // small error range timeout, in milliseconds
-                                             3, // large error range, in degrees
-                                             500, // large error range timeout, in milliseconds
-                                             20 // maximum acceleration (slew)
+                                             15, // derivative gain (kD)
+                                             0, // anti windup
+                                             0, // small error range, in degrees
+                                             0, // small error range timeout, in milliseconds
+                                             0, // large error range, in degrees
+                                             0, // large error range timeout, in milliseconds
+                                             0 // maximum acceleration (slew)
 );
 
 // sensors for odometry
 lemlib::OdomSensors sensors(&vertical, // vertical tracking wheel
                             nullptr, // vertical tracking wheel 2, set to nullptr as we don't have a second one
-                            &horizontal, // horizontal tracking wheel
+                            nullptr, // horizontal tracking wheel
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
                             &imu // inertial sensor
 );
@@ -250,7 +250,7 @@ void example_autonomous() {
     pros::lcd::print(4, "pure pursuit finished!");
 }
 void HALF_AWP() {
-    chassis.turnToPoint(-22, 24, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true}); 
     chassis.turnToPoint(-17, 9.6, 1000);    
     chassis.moveToPoint(-17, 9.6, 1000, {.forwards = true});    
     clawOpen();
@@ -312,46 +312,32 @@ void ELIMS_NEITHER_PIN() {
 }
 
 void autonomous() {
-    chassis.setPose(0, 9, 0);
-
-    //Step 1: lift up and down
-
-    // Arm.set_zero_position(Arm.get_position());
-    // Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
-    // Arm.move_absolute(1600,1000);
-    // pros::delay(850);
-    // Arm.move_absolute(0,1000);
-    // pros::delay(850);
-    // Arm.move_absolute(1500,1000);
-    // Arm.move_absolute(0,1000);
-
-    //Step 2:  set position and move forward
-    //chassis.setPose(0, 9, 0);
-    chassis.moveToPoint(0, 24, 1000, {.maxSpeed = 50});
-    //Step 3: Turn 90 degrees
-    pros::delay(3000);
-    chassis.turnToHeading(90, 1000, {.maxSpeed = 50});
-    // chassis.setPose(0, 0, 0);
-    // imu.set_heading(0);
-    // pros::delay(4000);
-    chassis.moveToPoint(24, 24, 1000, {.forwards = true, .maxSpeed = 100});
-
-    // Drop the preloaded pin into the goal
-    // clawOpen();
-
-    /* turn to face heading 90 with a very long timeout
-    chassis.moveToPoint(8, 0, 1000);
-    chassis.waitUntilDone();
+     chassis.setPose(0, 70, 0);
+    Arm.set_zero_position(Arm.get_position());
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+    Arm.move_absolute(1600,1000);
+    pros::delay(850);
+    Arm.move_absolute(0,1000);
+    pros::delay(850);
+    Arm.move_absolute(1500,1000);
+    Arm.move_absolute(0,1000);
+    chassis.moveToPoint(0, 93, 1000);
+    chassis.turnToPoint(24, 93, 1000);
+    chassis.moveToPoint(24, 93, 1000, {.maxSpeed = 50});
     pros::delay(1000);
-    chassis.moveToPoint(-8, 0, 1000);
-    chassis.waitUntilDone();
-    chassis.moveToPoint(0, -4, 1000);
-    chassis.waitUntilDone();
-    chassis.moveToPoint(0, 8, 1000);
-    chassis.waitUntilDone();*/
-
-    // chassis.moveToPoint(0, -15, 1000);
-    // chassis.waitUntilDone();
+    clawClose();
+    pros::delay(1000);
+    chassis.moveToPoint(16, 93, 1000, {.forwards = false});
+    chassis.turnToPoint(27, 122, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(27, 122, 5000, {.maxSpeed = 50});
+    pros::delay(1000);
+    clawOpen();
+    Arm.move_absolute(1500, 1000);
+    chassis.turnToPoint(30, 93, 1000);
+    chassis.moveToPoint(30, 93, 1000);
+    Arm.move_absolute(450, 1000);
+    pros::delay(1000);
+    clawClose();
 }
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
