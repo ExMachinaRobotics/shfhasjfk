@@ -317,27 +317,32 @@ void autonomous() {
     Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
     Arm.move_absolute(1600,1000);
     pros::delay(850);
-    Arm.move_absolute(0,1000);
+    Arm.move_absolute(800,1000);
     pros::delay(850);
-    Arm.move_absolute(1500,1000);
+    chassis.moveToPoint(0, 92, 1000, {.maxSpeed = 80});
+    chassis.turnToPoint(23.5, 92, 1000);
+    chassis.moveToPoint(23.5, 92, 1000, {.maxSpeed = 50});
+    pros::delay(1000);
     Arm.move_absolute(0,1000);
-    chassis.moveToPoint(0, 93, 1000);
-    chassis.turnToPoint(24, 93, 1000);
-    chassis.moveToPoint(24, 93, 1000, {.maxSpeed = 50});
-    pros::delay(1000);
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
+    pros::delay(500);
     clawClose();
-    pros::delay(1000);
-    chassis.moveToPoint(16, 93, 1000, {.forwards = false});
-    chassis.turnToPoint(27, 122, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
-    chassis.moveToPoint(27, 122, 5000, {.maxSpeed = 50});
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
+    chassis.moveToPoint(12, 92, 1000, {.forwards = false});
+    chassis.turnToPoint(23, 115, 1000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
+    chassis.moveToPoint(23, 115, 1000, {.maxSpeed = 50});
+    //chassis.moveToPoint(29.5, 120, 1000, {.maxSpeed = 20});
     pros::delay(1000);
     clawOpen();
     Arm.move_absolute(1500, 1000);
-    chassis.turnToPoint(30, 93, 1000);
-    chassis.moveToPoint(30, 93, 1000);
-    Arm.move_absolute(450, 1000);
+    chassis.turnToPoint(37, 93, 1000);
+    chassis.moveToPoint(37, 93, 1000);2
+    pros::delay(200);
+    Arm.move_absolute(700, 1000);
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
     pros::delay(1000);
     clawClose();
+    Arm.set_brake_mode_all(pros::E_MOTOR_BRAKE_HOLD);
 }
 // Fixed-position up/down steps for the lift.
 // Tune these numbers after testing on the real robot.
